@@ -11,6 +11,10 @@ defmodule Servy.Handler do
     |> format_response
   end
 
+# Prefer the mutliclause function over case statements for this
+# Especially once I move it into a separate file.
+# Cleaner, you can alter code for a single branch and not have to mess with a big
+# case clause, or you can just add new function clauses, easy-mode
   def handle_file({:ok, content}, conv) do
     %{ conv | status: 200, resp_body: content }
   end
@@ -71,6 +75,13 @@ defmodule Servy.Handler do
     %{ conv | status: 200, resp_body: "Teddy, Smokey, Paddington" }    
   end
 
+  def route(%{method: "GET", path: "/bears/new"} = conv) do
+    Path.expand("../../pages", __DIR__)
+      |> Path.join("form.html")
+      |> File.read
+      |> handle_file(conv)
+  end
+
   def route(%{method: "GET", path: "/bears/" <> id} = conv) do
     %{ conv | status: 200, resp_body: "Bear #{id}" }
   end
@@ -82,6 +93,13 @@ defmodule Servy.Handler do
   def route(%{method: "GET", path: "/about"} = conv) do
       Path.expand("../../pages", __DIR__)
       |> Path.join("about.html")
+      |> File.read
+      |> handle_file(conv)
+  end
+
+  def route(%{method: "GET", path: "/pages/" <> page} = conv) do
+    Path.expand("../../pages", __DIR__)
+      |> Path.join("${page}.html")
       |> File.read
       |> handle_file(conv)
   end
@@ -187,3 +205,14 @@ response = Servy.Handler.handle(request)
 
 IO.puts response
 
+request = """
+GET /bears/new HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handle(request)
+
+IO.puts response
