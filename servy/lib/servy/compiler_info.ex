@@ -19,6 +19,7 @@ defmodule Servy.CompilerInfo do
     @compiler_info
   end
 
+# This is so unsafe, it shows all of my env vars, paths etc
   def env do
     @compiler_env
   end
