@@ -1,13 +1,14 @@
 defmodule Servy.Handler do
 
   @moduledoc "Handles HTTP requests."
+  
+  alias Servy.Conv
 
   @pages_path Path.expand("../../pages", __DIR__)
 
   import Servy.Plugins, only: [rewrite_path: 1, log: 1, track: 1, emojify: 1]
   import Servy.Parser, only: [parse: 1]
   import Servy.HandleFile, only: [handle_file: 2]
-  alias Servy.Conv
 
   @doc "Transforms the request into a response."
   def handle(request) do
@@ -38,6 +39,12 @@ defmodule Servy.Handler do
 
   def route(%Conv{method: "GET", path: "/bears/" <> id} = conv) do
     %{ conv | status: 200, resp_body: "Bear #{id}" }
+  end
+
+  # name=Baloo&type=Brown
+  def route(%Conv{method: "POST", path: "/bears"} = conv) do
+    %{ conv | status: 201, 
+              resp_body: "Created a #{conv.params["type"]} bear named #{conv.params["name"]}!" }
   end
 
   def route(%Conv{method: "DELETE", path: "/bears/" <> _id} = conv) do
@@ -73,7 +80,6 @@ defmodule Servy.Handler do
   end
   
 end
-
 
 request = """
 GET /wildthings HTTP/1.1
@@ -149,13 +155,17 @@ response = Servy.Handler.handle(request)
 IO.puts response
 
 request = """
-GET /bears/new HTTP/1.1
+POST /bears HTTP/1.1
 Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 21
 
+name=Baloo&type=Brown
 """
 
 response = Servy.Handler.handle(request)
 
 IO.puts response
+
